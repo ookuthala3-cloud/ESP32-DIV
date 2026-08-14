@@ -48,6 +48,7 @@ jobs:
           arduino-cli lib install "NimBLE-Arduino"
           arduino-cli lib install "RF24"
           arduino-cli lib install "PCF8574"
+          arduino-cli lib install "XPT2046_Touchscreen"
 
       - name: Apply ESP32-DIV platform configuration
         run: |
