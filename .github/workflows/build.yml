@@ -35,27 +35,33 @@ jobs:
           unzip -q "Libraries/TFT_eSPI-master.zip" -d "$HOME/Arduino/libraries"
 
           TFT_DIR=$(find "$HOME/Arduino/libraries" -maxdepth 1 -type d -name "TFT_eSPI*" | head -n 1)
-
           echo "TFT_eSPI directory: $TFT_DIR"
 
           cp "Libraries/User_Setup v2.h" "$TFT_DIR/User_Setup.h"
+
       - name: Install repository CC1101 library
         run: |
           mkdir -p "$HOME/Arduino/libraries"
-          unzip -q "Libraries/SmartRC-CC1101-Driver-Lib-master.zip" -d "$HOME/Arduino/libraries"     
+          CC1101_ZIP=$(find "Libraries" -maxdepth 1 -type f -iname "SmartRC-CC1101-Driver-Lib*.zip" | head -n 1)
+          if [ -z "$CC1101_ZIP" ]; then
+            echo "CC1101 library ZIP not found in Libraries/"
+            exit 1
+          fi
+          echo "Using CC1101 library: $CC1101_ZIP"
+          unzip -q "$CC1101_ZIP" -d "$HOME/Arduino/libraries"
 
       - name: Install required Arduino libraries
         run: |
           arduino-cli lib install "Adafruit BusIO"
           arduino-cli lib install "Adafruit PN532"
           arduino-cli lib install "ArduinoJson"
-          arduino-cli lib install "NimBLE-Arduino"
-          arduino-cli lib install "RF24"
-          arduino-cli lib install "PCF8574"
-          arduino-cli lib install "XPT2046_Touchscreen"
+          arduino-cli lib install "NimBLE-Arduino@1.4.2"
+          arduino-cli lib install "PCF8574 library@2.4.0"
+          arduino-cli lib install "arduinoFFT@1.6.2"
+          arduino-cli lib install "RF24@1.4.11"
+          arduino-cli lib install "XPT2046_Touchscreen@1.4"
           arduino-cli lib install "rc-switch"
-          arduino-cli lib install "arduinoFFT"
-          arduino-cli lib install "IRremoteESP8266"
+          arduino-cli lib install "IRremoteESP8266@2.9.0"
 
       - name: Apply ESP32-DIV platform configuration
         run: |
@@ -65,7 +71,6 @@ jobs:
       - name: Compile ESP32-DIV
         run: |
           mkdir -p build
-
           arduino-cli compile \
             --fqbn "esp32:esp32:esp32s3:PartitionScheme=min_spiffs" \
             --libraries "$HOME/Arduino/libraries" \
@@ -83,3 +88,4 @@ jobs:
           name: ESP32-DIV-ST7789-240x240
           path: build/*
           if-no-files-found: error
+          
