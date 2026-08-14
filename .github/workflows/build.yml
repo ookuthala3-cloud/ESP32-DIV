@@ -55,6 +55,7 @@ jobs:
           arduino-cli lib install "XPT2046_Touchscreen"
           arduino-cli lib install "rc-switch"
           arduino-cli lib install "arduinoFFT"
+          arduino-cli lib install "IRremoteESP8266"
 
       - name: Apply ESP32-DIV platform configuration
         run: |
