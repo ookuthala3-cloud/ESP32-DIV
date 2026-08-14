@@ -1476,7 +1476,7 @@ void runUI() {
 }
 
 void scrollAddress(uint16_t vsp) {
-  tft.writecommand(ILI9341_VSCRSADD);
+  tft.writecommand(ST7789_VSCRSADD);
   tft.writedata(vsp >> 8);
   tft.writedata(vsp);
 }
@@ -1496,7 +1496,7 @@ int scroll_line() {
 }
 
 void setupScrollArea(uint16_t tfa, uint16_t bfa) {
-  tft.writecommand(ILI9341_VSCRDEF);
+  tft.writecommand(ST7789_VSCRDEF);
   tft.writedata(tfa >> 8);
   tft.writedata(tfa);
   tft.writedata((DISPLAY_HEIGHT - tfa - bfa) >> 8);
