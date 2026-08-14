@@ -1,0 +1,76 @@
+name: Build ESP32-DIV ST7789
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "ESP32-DIV/**"
+      - "Libraries/**"
+      - ".github/workflows/build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP32 board package
+        run: |
+          arduino-cli config init
+          arduino-cli core update-index \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core install esp32:esp32@2.0.10 \
+            --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Install repository TFT_eSPI
+        run: |
+          mkdir -p "$HOME/Arduino/libraries"
+          unzip -q "Libraries/TFT_eSPI-master.zip" -d "$HOME/Arduino/libraries"
+
+          TFT_DIR=$(find "$HOME/Arduino/libraries" -maxdepth 1 -type d -name "TFT_eSPI*" | head -n 1)
+
+          echo "TFT_eSPI directory: $TFT_DIR"
+
+          cp "Libraries/User_Setup v2.h" "$TFT_DIR/User_Setup.h"
+
+      - name: Install required Arduino libraries
+        run: |
+          arduino-cli lib install "Adafruit BusIO"
+          arduino-cli lib install "Adafruit PN532"
+          arduino-cli lib install "ArduinoJson"
+          arduino-cli lib install "NimBLE-Arduino"
+          arduino-cli lib install "RF24"
+
+      - name: Apply ESP32-DIV platform configuration
+        run: |
+          ESP32_PLATFORM="$HOME/.arduino15/packages/esp32/hardware/esp32/2.0.10"
+          cp "Libraries/platform.txt" "$ESP32_PLATFORM/platform.txt"
+
+      - name: Compile ESP32-DIV
+        run: |
+          mkdir -p build
+
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32s3:PartitionScheme=min_spiffs" \
+            --libraries "$HOME/Arduino/libraries" \
+            --output-dir "$PWD/build" \
+            "ESP32-DIV"
+
+      - name: Show generated files
+        run: |
+          echo "Generated firmware files:"
+          find build -maxdepth 1 -type f -print
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ESP32-DIV-ST7789-240x240
+          path: build/*
+          if-no-files-found: error
