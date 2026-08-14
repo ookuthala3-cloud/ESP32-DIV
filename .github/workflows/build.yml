@@ -77,6 +77,28 @@ jobs:
             --output-dir "$PWD/build" \
             "ESP32-DIV"
 
+      - name: Create merged firmware
+        run: |
+          ESPTOOL=$(find "$HOME/.arduino15/packages/esp32/tools/esptool_py" -type f -name "esptool.py" | head -n 1)
+          BOOT_APP0="$HOME/.arduino15/packages/esp32/hardware/esp32/2.0.10/tools/partitions/boot_app0.bin"
+
+          if [ -z "$ESPTOOL" ]; then
+            echo "esptool.py not found"
+            exit 1
+          fi
+
+          if [ ! -f "$BOOT_APP0" ]; then
+            echo "boot_app0.bin not found: $BOOT_APP0"
+            exit 1
+          fi
+
+          python "$ESPTOOL" --chip esp32s3 merge_bin \
+            -o "build/ESP32-DIV-ST7789-240x240-merged.bin" \
+            0x0000 "build/ESP32-DIV.ino.bootloader.bin" \
+            0x8000 "build/ESP32-DIV.ino.partitions.bin" \
+            0xE000 "$BOOT_APP0" \
+            0x10000 "build/ESP32-DIV.ino.bin"
+
       - name: Show generated files
         run: |
           echo "Generated firmware files:"
@@ -86,6 +108,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ESP32-DIV-ST7789-240x240
-          path: build/*
+          path: |
+            build/ESP32-DIV.ino.bin
+            build/ESP32-DIV.ino.bootloader.bin
+            build/ESP32-DIV.ino.partitions.bin
+            build/ESP32-DIV-ST7789-240x240-merged.bin
           if-no-files-found: error
           
