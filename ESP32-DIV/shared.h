@@ -273,18 +273,30 @@ static const uint8_t OBF_WB[]   = {75, 97, 110, 109, 122, 92, 109, 107, 96, 38, 
 #endif
 #define PCF8574_ADDR_MIN 0x20
 #define PCF8574_ADDR_MAX 0x27
-#if defined(BOARD_ESP32_DIV_V1)
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+// Direct push buttons: connect each GPIO to GND when pressed.
+#undef HAS_PCF8574_BUTTONS
+#define HAS_PCF8574_BUTTONS 0
+#define BTN_UP       4
+#define BTN_DOWN     5
+#define BTN_LEFT     6
+#define BTN_RIGHT    8
+#define BTN_SELECT   9
+#define BTN_BACK     10
+#elif defined(BOARD_ESP32_DIV_V1)
 #define BTN_UP       6
 #define BTN_DOWN     3
 #define BTN_LEFT     4
 #define BTN_RIGHT    5
 #define BTN_SELECT   7
+#define BTN_BACK     BTN_SELECT
 #else
 #define BTN_UP       7
 #define BTN_DOWN     5
 #define BTN_LEFT     3
 #define BTN_RIGHT    4
 #define BTN_SELECT   6
+#define BTN_BACK     BTN_SELECT
 #endif
 
 /* Buzzer */
