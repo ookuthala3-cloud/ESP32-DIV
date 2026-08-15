@@ -5,10 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "ESP32-DIV/**"
-      - "Libraries/**"
-      - ".github/workflows/build.yml"
 
 jobs:
   build:
