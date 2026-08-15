@@ -728,7 +728,9 @@ static bool isTouchNavSlotDown(int idx) {
 }
 
 bool isPhysicalButtonPressed(int buttonPin) {
-#if HAS_PCF8574_BUTTONS
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+  return digitalRead(buttonPin) == LOW;
+#elif HAS_PCF8574_BUTTONS
   if (getPcf8574Address() != 0) {
     return !pcf.digitalRead(buttonPin);
   }
@@ -768,6 +770,23 @@ bool isTouchNavButtonPressedEdge(int buttonPin) {
 }
 
 bool isButtonPressedEdge(int buttonPin) {
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+  static bool lastUp = HIGH, lastDown = HIGH, lastLeft = HIGH;
+  static bool lastRight = HIGH, lastSelect = HIGH, lastBack = HIGH;
+  bool *last = nullptr;
+  if (buttonPin == BTN_UP) last = &lastUp;
+  else if (buttonPin == BTN_DOWN) last = &lastDown;
+  else if (buttonPin == BTN_LEFT) last = &lastLeft;
+  else if (buttonPin == BTN_RIGHT) last = &lastRight;
+  else if (buttonPin == BTN_SELECT) last = &lastSelect;
+  else if (buttonPin == BTN_BACK) last = &lastBack;
+  if (last) {
+    const bool cur = digitalRead(buttonPin);
+    const bool edge = (cur == LOW && *last == HIGH);
+    *last = cur;
+    return edge;
+  }
+#endif
 #if HAS_PCF8574_BUTTONS
   if (getPcf8574Address() != 0) {
     const int idx = buttonPin % 8;
@@ -784,7 +803,11 @@ bool isButtonPressedEdge(int buttonPin) {
 }
 
 bool featureExitButtonPressed() {
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+  return isPhysicalButtonPressed(BTN_BACK);
+#else
   return isPhysicalButtonPressed(BTN_SELECT) || isTouchNavButtonPressed(BTN_SELECT);
+#endif
 }
 
 static void showFeatureUnavailable(const char* featureName, const char* requirement) {
@@ -4345,6 +4368,32 @@ void handleSettingsSubmenuButtons() {
 }
 
 void handleButtons() {
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+    // Dedicated BACK key: leave any menu layer and return toward the main menu.
+    if (isButtonPressedEdge(BTN_BACK)) {
+        last_interaction_time = millis();
+        if (in_sub_menu) {
+            if (current_menu_index == 2 && other_layer != OTHER_LAYER_HOME) {
+                other_layer = OTHER_LAYER_HOME;
+                current_submenu_index = 0;
+                updateActiveSubmenu();
+                other_menu_grid_initialized = false;
+                displaySubmenu();
+            } else {
+                in_sub_menu = false;
+                feature_active = false;
+                feature_exit_requested = false;
+                current_submenu_index = 0;
+                submenu_initialized = false;
+                other_menu_grid_initialized = false;
+                displayMenu();
+            }
+        }
+        delay(160);
+        return;
+    }
+#endif
+
     if (in_sub_menu) {
         switch (current_menu_index) {
 
@@ -4508,6 +4557,16 @@ void setup() {
   Serial.begin(115200);
   delay(50);
   Serial.println("[boot] start");
+
+#if defined(USE_DIRECT_GPIO_BUTTONS) && USE_DIRECT_GPIO_BUTTONS
+  pinMode(BTN_UP, INPUT_PULLUP);
+  pinMode(BTN_DOWN, INPUT_PULLUP);
+  pinMode(BTN_LEFT, INPUT_PULLUP);
+  pinMode(BTN_RIGHT, INPUT_PULLUP);
+  pinMode(BTN_SELECT, INPUT_PULLUP);
+  pinMode(BTN_BACK, INPUT_PULLUP);
+  Serial.println("[boot] direct GPIO buttons enabled");
+#endif
 
 #if !BOARD_HAS_ESP32S3
   // Weak USB / backlight load can brownout classic ESP32 during intro.
