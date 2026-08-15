@@ -7,6 +7,9 @@
 // #define BOARD_ESP32_DIV_V1
 #define BOARD_ESP32_DIV_V2
 
+// Custom ESP32-S3: six direct GPIO push buttons, active LOW to GND.
+#define USE_DIRECT_GPIO_BUTTONS 1
+
 // Set to 0 to hide the on-screen touch nav bar (5 footer buttons).
 // Touch button input will still work when this is disabled.
 #define TOUCH_BUTTON_CUE_ENABLED 1
