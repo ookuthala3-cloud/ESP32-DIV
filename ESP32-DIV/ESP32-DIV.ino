@@ -4506,72 +4506,9 @@ void handleButtons() {
             }
         }
 
-#if !defined(USE_DIRECT_GPIO_BUTTONS) || !USE_DIRECT_GPIO_BUTTONS
-        static unsigned long lastTouchTime = 0;
-        const unsigned long touchFeedbackDelay = 100;
-
-        if (!feature_active && (millis() - lastTouchTime >= touchFeedbackDelay)) {
-            int x, y;
-            if (!readTouchXY(x, y)) { return; }
-            delay(10);
-        for (int i = 0; i < NUM_MENU_ITEMS; i++) {
-                int column = i / 4;
-                int row = i % 4;
-                int x_position = (column == 0) ? X_OFFSET_LEFT : X_OFFSET_RIGHT;
-                int y_position = Y_START + row * Y_SPACING;
-
-                int button_x1 = x_position;
-                int button_y1 = y_position;
-                int button_x2 = x_position + 100;
-                int button_y2 = y_position + 60;
-
-                if (x >= button_x1 && x <= button_x2 && y >= button_y1 && y <= button_y2) {
-                    current_menu_index = i;
-                    last_interaction_time = millis();
-                    displayMenu();
-
-                    unsigned long startTime = millis();
-                    while (isTouchDownDismiss() && (millis() - startTime < touchFeedbackDelay)) {
-                        delay(10);
-                    }
-
-                    if (isTouchDownDismiss()) {
-
-                        if (current_menu_index == 3) {
-                            handleSettingsSubmenuButtons();
-                        } else if (current_menu_index == 7) {
-                            handleAboutPage();
-                        } else {
-                            updateActiveSubmenu();
-
-                            if (active_submenu_items && active_submenu_size > 0) {
-                                current_submenu_index = 0;
-                                if (current_menu_index == 2) {
-                                    other_layer = OTHER_LAYER_HOME;
-                                    other_menu_grid_initialized = false;
-                                    last_other_menu_index = -1;
-                                }
-                                in_sub_menu = true;
-                                submenu_initialized = false;
-                                displaySubmenu();
-                            } else {
-                                if (is_main_menu) {
-                                    is_main_menu = false;
-                                    displayMenu();
-                                } else {
-                                    is_main_menu = true;
-                                }
-                            }
-                        }
-                    }
-                    delay(200);
-                    break;
-                }
-            }
-        }
+        // Touchscreen main-menu input disabled in direct GPIO button build.
     }
 }
-#endif
 
 void setup() {
   Serial.begin(115200);
