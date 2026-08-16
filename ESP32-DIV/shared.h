@@ -678,7 +678,7 @@ static const uint8_t OBF_WB[]   = {75, 97, 110, 109, 122, 92, 109, 107, 96, 38, 
 #define TFT_WIDTH 240
 #endif
 #ifndef TFT_HEIGHT
-#define TFT_HEIGHT 320
+#define TFT_HEIGHT 240
 #endif
 #ifndef STATUS_BAR_Y_OFFSET
 #define STATUS_BAR_Y_OFFSET 0
